@@ -1,6 +1,6 @@
 ---
 name: signalk-visuals
-description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, components that build their DOM once and update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, and how to verify it headless.
+description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, a buildless stack (vanilla custom elements, or Preact for form-heavy apps) with vendored dependencies and an explicit browser floor such as Chromium 69 for Navico MFDs, components that update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, and how to verify it headless.
 ---
 
 # SignalK plugin webapp visuals
@@ -15,18 +15,70 @@ recommendation here picks one and says why.
 
 If a user's own guideline file exists in the repo or context, it wins over this skill.
 
-## 1. Structure and updates
+## 1. Stack, structure and updates
+
+- **Buildless, no bundler, no transpile step of your own.** Author native ES modules that the
+  browser runs as served, with relative import paths. TypeScript is welcome as a checker only:
+  `tsc --noEmit` with `checkJs` over JSDoc-annotated `.js`, so types are verified and nothing
+  is emitted.
+- **Pick one of two UI approaches and do not mix them in one webapp:**
+  - **Vanilla custom elements** (the default of the bergie/dotfiles guideline, used by
+    `signalk-huawei-b311-221` and `signalk-ais-statistics`): no framework, smallest download,
+    you own the update discipline below.
+  - **Buildless Preact** (used by [`hoeken/signalk-maintenance-tracker`](https://github.com/hoeken/signalk-maintenance-tracker/blob/main/docs/specification.md),
+    spec draft v1): worth it for form-heavy, table-heavy apps. The stack there is Preact 10
+    (React-compatible hooks, about 4 KB), **htm** for JSX-like tagged templates (no JSX compile
+    step), **@preact/signals** with a small hand-rolled polling layer for data, a hash router
+    (preact-router in hash mode, or a tiny one), **snarkdown** for Markdown with the output
+    sanitised before insertion, **day.js** for calendar-aware date maths, and **Bootstrap Icons**
+    as the single icon set (vendored CSS plus woff2, used as `<i class="bi bi-...">`). Tables,
+    forms and modals are hand-rolled with plain CSS: no component library, because the
+    sort/filter/paginate rules are app-specific and a heavy table or UI dependency costs more
+    than it saves. Tests: vitest with @testing-library/preact on jsdom.
+  - The guideline text bans React-style frameworks outright. Preact is a deliberate exception
+    that keeps the intent (small, no build, granular DOM patching by the virtual DOM), so tell
+    the user it is a deviation before choosing it, and check licences (below).
+- **Vendor every runtime dependency.** Commit pinned ESM copies under `public/vendor/` and
+  import them by explicit relative path (import maps need Chrome 89, so bare specifiers are out).
+  Vendor stylesheets and font files the same way and load them with a `<link>`. No CDN, no remote
+  fonts, nothing fetched at runtime: boat servers are often offline or metered. Optional map tiles
+  are the one exception and must degrade (section 11). Keep each library's licence file, and any
+  dependency must be compatible with **EUPL-1.2** (MIT, BSD, ISC, Apache-2.0 all are).
+- **Browser floor.** Decide it up front. Navico / B&G multifunction displays run **Chromium 69**
+  (September 2018) and the maintenance-tracker authors to that floor and enhances upward, never
+  the reverse. If MFDs are a target:
+  - Author to an ES2017 baseline. Avoid `?.`, `??`, logical assignment and private `#fields` in
+    your own code (a transpiling reverse proxy can down-level vendored code, but do not rely on it).
+  - Transpiling rewrites syntax only. It does not polyfill runtime APIs: no `structuredClone`,
+    `Array.prototype.at`, `Object.fromEntries`, `Promise.allSettled`, `String.prototype.matchAll`,
+    `globalThis` or `queueMicrotask` without your own polyfill.
+  - CSS safe on 69: custom properties, flexbox, grid including grid `gap`, `position: sticky`,
+    media queries, woff2. Avoid or treat as optional enhancement: flexbox `gap` (84), `:is()` /
+    `:where()` (88), `aspect-ratio` (88), `:has()` (105), container queries (105), `@layer` (99),
+    CSS nesting (112). Use grid `gap` or margins for spacing that must exist on the floor.
+  - **`clamp()`, `min()` and `max()` arrive in Chromium 79**, so the fluid sizes recommended below
+    need a plain declaration before them (`font-size: 1.7rem; font-size: clamp(...)`): an
+    unsupported declaration is dropped and the earlier one stays.
+  - Rule of thumb: an unsupported feature must degrade to acceptable, never to broken.
+    `prefers-color-scheme` and `prefers-reduced-motion` are fine as pure enhancements.
+  - Without a build to catch mistakes, compatibility is a review item. Smoke-test load, list,
+    detail and one write flow on a Chromium 69 engine.
+  - Not needed for phones and laptops only. Say so in the README if the floor is modern.
+- **Backend stack is out of scope here.** The same spec also covers the server side (TypeScript
+  compiled with `tsc`, `node:sqlite`, the Express router from `registerWithRouter`); see the
+  `signalk-plugin` skill for plugin authoring.
 
 - **Nothing from the internet at runtime.** Boat servers are often offline or metered. Ship the
   page's code, fonts and icons with the plugin. No CDN, no remote fonts. Optional map tiles are
   the one exception and must degrade (see section 11). Keep any third-party licence file.
-- **Granular DOM updates.** Build each component's DOM once, cache the node
+- **Granular DOM updates.** With vanilla elements, build each component's DOM once, cache the node
   references, and afterwards only set `textContent` or attributes. Never reassign `innerHTML`
   on data changes. Charts update an SVG by setting `d` / `points` on cached elements.
   **Decision:** the huawei panels first used a `mount(node)` that replaces the whole body on
   every poll. That works at 10 s intervals but loses focus, scroll position and text selection
   in inputs. Prefer the cached-node style for anything that contains a form or updates faster
-  than every few seconds.
+  than every few seconds. With Preact the virtual DOM does this for you, provided list items have
+  stable `key`s.
 - **Routing:** native `hashchange`, routes like `#/overview`, `#/charts?window=7d`. Parse the
   hash in a small pure function so it is testable. Phone-only tab bars (section 8) may be plain
   state instead of routes.
@@ -234,6 +286,8 @@ a **circular buffer**: cap it (about 50 lines) and remove the oldest child when 
 
 ## Checklist
 
+- [ ] Buildless; one UI approach; runtime deps vendored under `public/vendor/` with licences
+- [ ] Browser floor decided (Chromium 69 for MFDs), `clamp()` has a plain fallback if so
 - [ ] Nothing loaded from the internet
 - [ ] DOM built once, updated via `textContent` / attributes
 - [ ] `data-mode` from `environment.mode`, default day; all colours from the variables

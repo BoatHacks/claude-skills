@@ -191,7 +191,7 @@ truth; the same `SKILL.md` files load in Codex, Copilot CLI, and Gemini CLI unch
 The look and behaviour of a **SignalK plugin webapp**: the dark tactical console style shared by
 the boat's Status Tiles display and the BoatHacks plugin UIs. Day and night palettes driven by
 `environment.mode` (dark in both, never a white mode), flat panels with corner brackets where
-missing or stale data is neutral and never green, components that build their DOM
+missing or stale data is neutral and never green, a buildless vendored stack (vanilla or Preact), Chromium 69 floor notes for Navico MFDs, components that build their DOM
 once and update in place, one throttled WebSocket with backoff and an offline banner, display
 units from `meta.displayUnits` through a safe formula parser (no `eval`) with ISO-prefix
 fallback, ship time versus UTC with `Z`, phone and nav-station layouts with 48 px targets, and
