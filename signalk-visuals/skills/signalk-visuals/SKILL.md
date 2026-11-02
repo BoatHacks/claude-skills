@@ -1,6 +1,6 @@
 ---
 name: signalk-visuals
-description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, vanilla custom elements that build their DOM once and update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, and how to verify it headless.
+description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, components that build their DOM once and update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, and how to verify it headless.
 ---
 
 # SignalK plugin webapp visuals
@@ -10,24 +10,17 @@ stays readable in glare and does not ruin night vision. The base rules come from
 `signalk-visuals` guideline in [bergie/dotfiles](https://github.com/bergie/dotfiles/blob/main/pi/.pi/agent/context/signalk-visuals.md)
 (written for the vessel *Lille Ø*). The sections marked **Decision** are choices made while
 applying it in two plugins, `signalk-huawei-b311-221` (LTE router, a scrolling page with forms)
-and `signalk-ais-statistics` (charts, radar, Leaflet map). Where those two disagreed, the
+and `signalk-ais-statistics` (charts, radar, map). Where those two disagreed, the
 recommendation here picks one and says why.
 
 If a user's own guideline file exists in the repo or context, it wins over this skill.
 
-## 1. Architecture
+## 1. Structure and updates
 
-- **Vanilla web components, native ES modules, no UI framework, no CSS framework.** No React,
-  Vue, Tailwind. Anything strictly needed must be compatible with **EUPL-1.2** (MIT, BSD, ISC,
-  Apache-2.0 all are); copy its licence into the repo.
-- **Nothing from the internet at runtime.** Boat servers are often offline or metered. Vendor
-  code, fonts and icons into the plugin's `public/`. No CDN, no remote fonts. Optional map
-  tiles are the one exception and must degrade (see section 11).
-- **Decision: a build step is allowed when the code is TypeScript.** The guideline says no build
-  tools; `signalk-ais-statistics` kept TypeScript with a single esbuild bundle because the
-  server side is TypeScript too. The rule that matters is that the output is plain custom
-  elements and DOM calls. Plain JS needs no build at all (the huawei webapp is unbundled).
-- **Granular DOM updates.** Build the element's DOM once in `connectedCallback`, cache the node
+- **Nothing from the internet at runtime.** Boat servers are often offline or metered. Ship the
+  page's code, fonts and icons with the plugin. No CDN, no remote fonts. Optional map tiles are
+  the one exception and must degrade (see section 11). Keep any third-party licence file.
+- **Granular DOM updates.** Build each component's DOM once, cache the node
   references, and afterwards only set `textContent` or attributes. Never reassign `innerHTML`
   on data changes. Charts update an SVG by setting `d` / `points` on cached elements.
   **Decision:** the huawei panels first used a `mount(node)` that replaces the whole body on
@@ -186,7 +179,7 @@ mounting, and an ultra-faint tint of the state colour.
   of the viewport height so the last item is not cut off.
 - **Maps and canvases** sit inside a framed card. Controls float over the map as absolutely
   positioned, semi-transparent dark boxes (`rgba(17, 20, 20, 0.8)`) with sharp 1px borders;
-  restyle Leaflet's own controls this way. Desktop height `calc(100vh - 140px)`, phone
+  restyle the map library's own controls this way. Desktop height `calc(100vh - 140px)`, phone
   `min-height: 50vh` so the page still scrolls past it.
 
 ## 9. Forms and controls
@@ -229,7 +222,7 @@ a **circular buffer**: cap it (about 50 lines) and remove the oldest child when 
 
 ## 12. Verify before calling it done
 
-- **Unit-test the pure helpers** in Node: formula parser and unit conversion, ISO prefix
+- **Unit-test the pure helpers** in a test runner: formula parser and unit conversion, ISO prefix
   formatting, time offset and date formatting, hash route parsing, backoff schedule, state
   thresholds (neutral on stale or missing).
 - **Headless screenshots** in day and night, at desktop and phone width, plus an offline run with
@@ -241,7 +234,7 @@ a **circular buffer**: cap it (about 50 lines) and remove the oldest child when 
 
 ## Checklist
 
-- [ ] Vanilla custom elements, nothing loaded from the internet, licences EUPL-1.2 compatible
+- [ ] Nothing loaded from the internet
 - [ ] DOM built once, updated via `textContent` / attributes
 - [ ] `data-mode` from `environment.mode`, default day; all colours from the variables
 - [ ] Flat, brackets, `.theme-*` classes; stale or missing is neutral, never green

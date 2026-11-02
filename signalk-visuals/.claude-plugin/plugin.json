@@ -1,6 +1,6 @@
 {
   "name": "signalk-visuals",
-  "description": "Build a SignalK plugin webapp in the dark tactical console style: day/night from environment.mode, vanilla custom elements with granular updates, throttled WebSocket with backoff, display units from path metadata, ship time vs UTC, phone and nav-station layouts.",
+  "description": "Build a SignalK plugin webapp in the dark tactical console style: day/night from environment.mode, granular DOM updates, throttled WebSocket with backoff, display units from path metadata, ship time vs UTC, phone and nav-station layouts.",
   "version": "0.1.0",
   "author": { "name": "Tobias Rosenstock" },
   "license": "MIT",
