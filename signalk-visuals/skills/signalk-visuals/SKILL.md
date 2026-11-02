@@ -129,6 +129,9 @@ stays dark in both.
 display; ais-statistics used the guideline value. Use `#080a0c` and put the same value in the
 `theme-color` meta so the phone browser chrome blends in.
 
+A swatch sheet of every color below, with foreground and background pairs and where each is
+used, is in [`color-palette.html`](color-palette.html) next to this file.
+
 Every colour a page uses, including chart series and map overlays, must be one of these
 variables (or derived from them) so night mode dims it too. ais-statistics maps class A to teal,
 class B to orange, other to green, and p99 / p95 / median / average to teal / orange / green /
