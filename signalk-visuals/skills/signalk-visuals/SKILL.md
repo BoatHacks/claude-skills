@@ -135,8 +135,8 @@ display; ais-statistics used the guideline value. Use `#080a0c` and put the same
 `theme-color` meta so the phone browser chrome blends in.
 
 A working example page with display and input elements in this style is in
-[](example/index.html) (add  and  to its address;
-screenshots in ).
+[`example/index.html`](example/index.html) (add `?mode=night` and `&offline=1` to its address;
+screenshots in `example/screenshots/`).
 
 A swatch sheet of every color below, with foreground and background pairs and where each is
 used, is in [`color-palette.html`](color-palette.html) next to this file.
