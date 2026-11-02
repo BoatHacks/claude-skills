@@ -117,10 +117,15 @@ stays dark in both.
   --color-teal:  #33616b;  --color-teal-rgb: 51, 97, 107;
   --color-orange:#8a5318;  --color-orange-rgb: 138, 83, 24;
   --color-red:   #8f3333;  --color-red-rgb: 143, 51, 51;
-  --color-grey:  #333333;  --color-grey-rgb: 51, 51, 51;
-  --text-main: #c4c4c4;    --text-muted: #666677;
+  --color-grey:  #5a5a5a;  --color-grey-rgb: 90, 90, 90;
+  --text-main: #c4c4c4;    --text-muted: #858596;
 }
 ```
+
+Night is meant to be dim, but not unreadable. Night grey is `#5a5a5a` (about 2.7:1 on
+`--bg-panel`, in line with night teal and red) and night muted text `#858596` (about 5.1:1). The
+earlier `#333333` and `#666677` were only 1.5:1 and 3.3:1, which made stale panels, whose label
+is grey, nearly invisible exactly when they matter.
 
 **Decision: define an `-rgb` triplet next to every colour.** Tints and borders need
 `rgba(var(--color-green-rgb), 0.16)`, and CSS cannot split a hex variable. Both plugins do this.
