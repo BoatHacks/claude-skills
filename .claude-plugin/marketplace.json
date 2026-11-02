@@ -250,6 +250,24 @@
         "rust",
         "plugin"
       ]
+    },
+    {
+      "name": "signalk-visuals",
+      "source": "./signalk-visuals",
+      "description": "Build a SignalK plugin webapp in the dark tactical console style: day/night palette from environment.mode, flat panels where missing data is neutral never green, vanilla custom elements with granular updates, a throttled WebSocket with backoff, display units from path metadata, ship time vs UTC, phone and nav-station layouts, and headless verification.",
+      "author": {
+        "name": "Tobias Rosenstock"
+      },
+      "repository": "https://github.com/BoatHacks/claude-skills",
+      "license": "MIT",
+      "keywords": [
+        "signalk",
+        "marine",
+        "webapp",
+        "ui",
+        "design",
+        "day-night"
+      ]
     }
   ]
 }

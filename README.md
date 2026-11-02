@@ -8,7 +8,7 @@ marine-AI stack.
 
 ```
 /plugin marketplace add sailingnaturali/claude-skills
-/plugin install signalk-plugin@sailingnaturali     # or signalk-apis@…, signalk-container-helper@…, signalk-e2e@…, git-worktrees@…, clipboard-fallback@…, repo-scaffold@…, coderabbit-cli@…, signalk-registry@…, npm-oidc-publish@…, oss-branch-protection@…, debug-mcp-agent@…, record-web-gif@…, signalk-wasm@…
+/plugin install signalk-plugin@sailingnaturali     # or signalk-apis@…, signalk-container-helper@…, signalk-e2e@…, git-worktrees@…, clipboard-fallback@…, repo-scaffold@…, coderabbit-cli@…, signalk-registry@…, npm-oidc-publish@…, oss-branch-protection@…, debug-mcp-agent@…, record-web-gif@…, signalk-wasm@…, signalk-visuals@…
 ```
 
 ## Plugins
@@ -186,6 +186,19 @@ Skills in this marketplace follow the cross-vendor
 runtime-specific tool ids in prose (write "dispatch a subagent", not a tool name). The
 `.claude-plugin/` marketplace/plugin wrappers are Claude Code packaging, not the source of
 truth; the same `SKILL.md` files load in Codex, Copilot CLI, and Gemini CLI unchanged.
+
+### `signalk-visuals`
+The look and behaviour of a **SignalK plugin webapp**: the dark tactical console style shared by
+the boat's Status Tiles display and the BoatHacks plugin UIs. Day and night palettes driven by
+`environment.mode` (dark in both, never a white mode), flat panels with corner brackets where
+missing or stale data is neutral and never green, vanilla custom elements that build their DOM
+once and update in place, one throttled WebSocket with backoff and an offline banner, display
+units from `meta.displayUnits` through a safe formula parser (no `eval`) with ISO-prefix
+fallback, ship time versus UTC with `Z`, phone and nav-station layouts with 48 px targets, and
+the favicon / `theme-color` rules. Based on the `signalk-visuals` guideline in
+[bergie/dotfiles](https://github.com/bergie/dotfiles) plus the decisions made in
+`signalk-huawei-b311-221` and `signalk-ais-statistics`, with the places those two disagree
+called out.
 
 ## License
 
