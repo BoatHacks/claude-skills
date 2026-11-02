@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en" data-mode="day">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a0c">
+<title>Signal K visuals example</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg-base: #080a0c;
+  --bg-panel: #111414;
+  --bg-panel-muted: #0a0c0c;
+  --font-ui: system-ui, -apple-system, sans-serif;
+  --font-data: ui-monospace, 'Fira Code', monospace;
+}
+:root, :root[data-mode="day"] {
+  --color-green: #8dfcbb;  --color-green-rgb: 141, 252, 187;
+  --color-teal: #66c6db;   --color-teal-rgb: 102, 198, 219;
+  --color-orange: #fca847; --color-orange-rgb: 252, 168, 71;
+  --color-red: #ff5e5e;    --color-red-rgb: 255, 94, 94;
+  --color-grey: #666666;   --color-grey-rgb: 102, 102, 102;
+  --text-main: #ffffff;
+  --text-muted: #a0a0b5;
+}
+:root[data-mode="night"] {
+  --color-green: #4a7555;  --color-green-rgb: 74, 117, 85;
+  --color-teal: #33616b;   --color-teal-rgb: 51, 97, 107;
+  --color-orange: #8a5318; --color-orange-rgb: 138, 83, 24;
+  --color-red: #8f3333;    --color-red-rgb: 143, 51, 51;
+  --color-grey: #5a5a5a;   --color-grey-rgb: 90, 90, 90;
+  --text-main: #c4c4c4;
+  --text-muted: #858596;
+}
+* { box-sizing: border-box; border-radius: 0; }
+[hidden] { display: none !important; }
+html, body { margin: 0; background: var(--bg-base); }
+body { font: 15px/1.45 var(--font-ui); color: var(--text-main); }
+
+header {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 24px;
+  min-height: 44px; padding: 6px clamp(14px, 2vw, 32px);
+  background: var(--bg-panel-muted); border-bottom: 1px solid rgba(var(--color-grey-rgb), 0.6);
+  font-size: 0.8rem; letter-spacing: 0.12em; text-transform: uppercase;
+}
+header h1 { margin: 0; font-size: inherit; font-weight: 700; letter-spacing: 0.22em; }
+.chrome { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; color: var(--text-muted); }
+.chrome .age { padding: 2px 10px; border: 1px solid rgba(var(--color-grey-rgb), 0.7); }
+.chrome .dot { display: inline-block; width: 1.1ch; height: 1.1ch; background: var(--color-green); margin-right: 8px; }
+.mono { font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+.chrome .clock { color: var(--text-main); font-weight: 600; }
+
+.page { max-width: 1280px; margin: 0 auto; padding: clamp(12px, 2vw, 28px) clamp(14px, 2vw, 32px) 40px; }
+.banner { margin: 0 0 14px; padding: 10px 14px; font-weight: 600; }
+.grid { display: grid; gap: clamp(10px, 1.4vw, 20px); grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.wide { grid-column: 1 / -1; }
+h2.section { margin: 28px 0 10px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); }
+
+:root { --theme-color: var(--color-teal); --theme-color-rgb: var(--color-teal-rgb); }
+.theme-green  { --theme-color: var(--color-green);  --theme-color-rgb: var(--color-green-rgb); }
+.theme-teal   { --theme-color: var(--color-teal);   --theme-color-rgb: var(--color-teal-rgb); }
+.theme-orange { --theme-color: var(--color-orange); --theme-color-rgb: var(--color-orange-rgb); }
+.theme-red    { --theme-color: var(--color-red);    --theme-color-rgb: var(--color-red-rgb); }
+.theme-offline{ --theme-color: var(--color-grey);   --theme-color-rgb: var(--color-grey-rgb); }
+
+.sk-card {
+  position: relative; padding: 18px 20px;
+  background: rgba(var(--theme-color-rgb), 0.05);
+  border: 1px solid rgba(var(--theme-color-rgb), 0.3);
+}
+.sk-card::before, .sk-card::after { content: ""; position: absolute; width: 14px; height: 14px; pointer-events: none; }
+.sk-card::before { top: -1px; left: -1px; border-top: 2px solid var(--theme-color); border-left: 2px solid var(--theme-color); }
+.sk-card::after { bottom: -1px; right: -1px; border-bottom: 2px solid var(--theme-color); border-right: 2px solid var(--theme-color); }
+.sk-card.strong { background: rgba(var(--theme-color-rgb), 0.16); border: 3px solid rgba(var(--theme-color-rgb), 0.65); }
+.sk-card.strong::before { top: 4px; left: 4px; border-width: 4px; width: 18px; height: 18px; }
+.sk-card.strong::after { bottom: 4px; right: 4px; border-width: 4px; width: 18px; height: 18px; }
+.sk-card.pulse { animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 0%, 100% { border-color: rgba(var(--theme-color-rgb), 0.5); } 50% { border-color: rgba(var(--theme-color-rgb), 1); } }
+@media (prefers-reduced-motion: reduce) { .sk-card.pulse { animation: none; } }
+
+.label { margin: 0 0 8px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--theme-color); }
+.value { font: 700 2.5rem/1.1 var(--font-data); font-variant-numeric: tabular-nums; color: var(--text-main); }
+.value small { font-size: 0.9rem; font-weight: 400; color: var(--text-muted); margin-left: 6px; }
+.sub { margin-top: 6px; font-size: 0.85rem; color: var(--text-muted); }
+.bar { margin-top: 12px; height: 8px; background: rgba(var(--color-grey-rgb), 0.5); }
+.bar i { display: block; height: 100%; background: var(--theme-color); }
+
+label.f { display: block; margin: 0 0 4px; font-size: 0.8rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.field { margin-bottom: 16px; }
+input[type=text], input[type=number], select {
+  -webkit-appearance: none; appearance: none; width: 100%; min-height: 48px; padding: 8px 2px;
+  background: transparent; color: var(--text-main); font: 1.1rem var(--font-data);
+  border: 0; border-bottom: 2px solid var(--color-grey); outline: none; transition: border-color 0.15s;
+}
+input:focus, input.is-focus, select:focus { border-bottom-color: var(--theme-color); }
+input::placeholder { color: var(--text-muted); }
+.row { display: flex; gap: 10px; flex-wrap: wrap; align-items: stretch; }
+.btn {
+  -webkit-appearance: none; appearance: none; min-height: 48px; min-width: 48px; padding: 0 18px; cursor: pointer;
+  background: transparent; color: var(--theme-color); border: 1px solid var(--theme-color);
+  font: 0.85rem var(--font-data); letter-spacing: 0.1em; text-transform: uppercase;
+}
+.btn:hover, .btn:active, .btn.is-hover { background: var(--theme-color); color: var(--bg-base); }
+.btn:focus-visible { outline: 2px solid var(--color-teal); outline-offset: 2px; }
+.toggle { display: inline-flex; border: 1px solid var(--theme-color); }
+.toggle button {
+  -webkit-appearance: none; appearance: none; min-height: 48px; min-width: 72px; padding: 0 14px; cursor: pointer;
+  background: transparent; color: var(--text-muted); border: 0; font: 0.85rem var(--font-data); letter-spacing: 0.1em;
+}
+.toggle button[aria-pressed="true"] { background: var(--theme-color); color: var(--bg-base); }
+
+.console { font: 0.85rem/1.6 var(--font-data); }
+.console .ln { display: grid; grid-template-columns: 5.5ch 1fr auto; gap: 14px; padding: 2px 0; border-top: 1px solid rgba(var(--color-grey-rgb), 0.3); }
+.console .t { color: var(--text-muted); }
+.console .m { color: var(--text-main); overflow-wrap: anywhere; }
+.console .s { text-align: right; }
+.s.ok { color: var(--color-green); } .s.warn { color: var(--color-orange); } .s.fail { color: var(--color-red); }
+
+table.kv { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+table.kv td { padding: 6px 0; border-top: 1px solid rgba(var(--color-grey-rgb), 0.3); }
+table.kv td:last-child { text-align: right; font: 1rem var(--font-data); font-variant-numeric: tabular-nums; }
+table.kv td:first-child { color: var(--text-muted); }
+</style>
+</head>
+<body>
+<header>
+  <h1>Signal K visuals example</h1>
+  <div class="chrome">
+    <span class="age mono">Updated 4 s ago</span>
+    <span id="link"><i class="dot"></i><span id="linktxt">Server online</span></span>
+    <span class="clock mono" title="ship time, no zone suffix">14:32</span>
+    <span class="mono">2026-11-02</span>
+    <span class="mono" title="UTC, with Z">12:32Z</span>
+  </div>
+</header>
+
+<div class="page">
+  <div id="offline" class="banner sk-card theme-red strong" hidden>Connection lost. Retrying in 8 s.</div>
+
+  <h2 class="section">Display elements</h2>
+  <div class="grid">
+    <section class="sk-card theme-green">
+      <p class="label">LTE signal</p>
+      <div class="value">-98<small>dBm</small></div>
+      <div class="sub">RSRP, fresh</div>
+      <div class="bar"><i style="width:72%"></i></div>
+    </section>
+    <section class="sk-card theme-orange">
+      <p class="label">Data plan</p>
+      <div class="value">82<small>%</small></div>
+      <div class="sub">16.4 GB of 20 GB, resets in 6 days</div>
+      <div class="bar"><i style="width:82%"></i></div>
+    </section>
+    <section class="sk-card theme-red strong pulse">
+      <p class="label">Bilge alarm</p>
+      <div class="value">ON</div>
+      <div class="sub">Raised 14:29, aft bilge</div>
+    </section>
+    <section class="sk-card theme-offline">
+      <p class="label">Router link</p>
+      <div class="value">-</div>
+      <div class="sub">No data for 5 min. Never shown as green.</div>
+    </section>
+    <section class="sk-card theme-teal">
+      <p class="label">Solar yield</p>
+      <div class="value">1.2<small>kW</small></div>
+      <div class="sub">15 kWh today (ISO prefixes, not 1200 W)</div>
+    </section>
+    <section class="sk-card theme-teal">
+      <p class="label">Coverage</p>
+      <div class="value">12.3<small>km</small></div>
+      <div class="sub">Furthest report today, 4.1 km² covered</div>
+    </section>
+    <section class="sk-card theme-teal wide">
+      <p class="label">Details</p>
+      <table class="kv">
+        <tr><td>Operator</td><td>Telekom.de</td></tr>
+        <tr><td>Connected since</td><td>2026-11-01 08:14</td></tr>
+        <tr><td>Last report (UTC)</td><td>12:31Z</td></tr>
+      </table>
+    </section>
+  </div>
+
+  <h2 class="section">Input elements</h2>
+  <div class="grid">
+    <section class="sk-card theme-teal">
+      <p class="label">Message</p>
+      <div class="field"><label class="f" for="to">Recipient</label><input id="to" type="text" inputmode="tel" placeholder="+49 171 0000000" value=""></div>
+      <div class="field"><label class="f" for="txt">Text (focused)</label><input id="txt" class="is-focus" type="text" value="Back at anchor by 18:00"></div>
+      <div class="row"><button class="btn" type="button">Send</button><button class="btn is-hover" type="button">Hover state</button></div>
+    </section>
+    <section class="sk-card theme-teal">
+      <p class="label">Position</p>
+      <div class="field"><label class="f" for="lat">Latitude, unsigned</label>
+        <div class="row" style="flex-wrap:nowrap"><input id="lat" type="text" inputmode="decimal" value="54.4821"><div class="toggle"><button type="button" aria-pressed="true">N</button><button type="button" aria-pressed="false">S</button></div></div></div>
+      <div class="field"><label class="f" for="d">Offset, signed</label><input id="d" type="number" value="-9.5" step="0.1"></div>
+      <div class="row"><button class="btn" type="button">Set</button></div>
+    </section>
+    <section class="sk-card theme-green">
+      <p class="label">Switches</p>
+      <div class="field"><label class="f">Anchor light</label>
+        <div class="toggle"><button type="button" aria-pressed="true">[ ON ]</button><button type="button" aria-pressed="false">[ OFF ]</button></div></div>
+      <div class="field"><label class="f">Bilge pump</label>
+        <div class="toggle"><button type="button" aria-pressed="false">[ ON ]</button><button type="button" aria-pressed="true">[ OFF ]</button></div></div>
+      <div class="row"><button class="btn" type="button">Apply</button></div>
+    </section>
+    <section class="sk-card theme-red">
+      <p class="label">Danger zone</p>
+      <div class="sub" style="margin:0 0 14px">Confirm before running. Hidden for read-only users.</div>
+      <div class="row"><button class="btn" type="button">Restart plan period</button></div>
+    </section>
+  </div>
+
+  <h2 class="section">Console</h2>
+  <section class="sk-card theme-teal">
+    <p class="label">Event log</p>
+    <div class="console" id="log"></div>
+  </section>
+</div>
+
+<script>
+(function () {
+  var q = new URLSearchParams(location.search);
+  document.documentElement.dataset.mode = q.get('mode') === 'night' ? 'night' : 'day';
+  if (q.get('offline') === '1') {
+    document.getElementById('offline').hidden = false;
+    document.getElementById('linktxt').textContent = 'Server lost';
+    document.getElementById('link').style.color = 'var(--color-red)';
+    document.querySelector('#link .dot').style.background = 'var(--color-red)';
+  }
+  var lines = [
+    ['14:32', 'Router poll finished', 'OK', 'ok'],
+    ['14:31', 'RSRP -98 dBm, SINR 7 dB', 'OK', 'ok'],
+    ['14:29', 'Bilge level above limit', 'WARN', 'warn'],
+    ['14:29', 'Bilge alarm raised', 'FAIL', 'fail'],
+    ['14:18', 'WebSocket reconnected after 2 attempts', 'OK', 'ok'],
+    ['14:17', 'WebSocket closed', 'WARN', 'warn']
+  ];
+  var log = document.getElementById('log');
+  lines.forEach(function (l) {
+    var row = document.createElement('div'); row.className = 'ln';
+    var t = document.createElement('span'); t.className = 't'; t.textContent = l[0];
+    var m = document.createElement('span'); m.className = 'm'; m.textContent = l[1];
+    var s = document.createElement('span'); s.className = 's ' + l[3]; s.textContent = '[ ' + l[2] + ' ]';
+    row.append(t, m, s); log.append(row);
+  });
+})();
+</script>
+</body>
+</html>

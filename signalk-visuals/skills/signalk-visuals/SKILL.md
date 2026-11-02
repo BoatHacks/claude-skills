@@ -134,6 +134,10 @@ is grey, nearly invisible exactly when they matter.
 display; ais-statistics used the guideline value. Use `#080a0c` and put the same value in the
 `theme-color` meta so the phone browser chrome blends in.
 
+A working example page with display and input elements in this style is in
+[](example/index.html) (add  and  to its address;
+screenshots in ).
+
 A swatch sheet of every color below, with foreground and background pairs and where each is
 used, is in [`color-palette.html`](color-palette.html) next to this file.
 
