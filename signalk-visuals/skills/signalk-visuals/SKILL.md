@@ -1,6 +1,6 @@
 ---
 name: signalk-visuals
-description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, a buildless stack (vanilla custom elements, or Preact for form-heavy apps) with vendored dependencies and an explicit browser floor such as Chromium 69 for Navico MFDs, components that update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, and how to verify it headless.
+description: Use when building or restyling the webapp of a SignalK server plugin so it matches the dark "tactical console" look used on the boat's Status Tiles display. Covers the day/night palette driven by environment.mode (dark in both modes, never a white mode), flat panels with corner brackets and state colours where missing data is neutral never green, a buildless stack (vanilla custom elements, or Preact for form-heavy apps) with vendored dependencies and an explicit browser floor such as Chromium 69 for Navico MFDs, components that update in place, one throttled WebSocket with backoff and an offline banner, display units from path meta.displayUnits with a safe formula parser, ship time versus UTC with Z, phone and nav-station layouts with 48 px targets, hardware-style forms, the favicon and theme-color rules, the house style and prompt template for generated plugin icons, and how to verify it headless.
 ---
 
 # SignalK plugin webapp visuals
@@ -284,6 +284,132 @@ a **circular buffer**: cap it (about 50 lines) and remove the oldest child when 
 - Run it against a development SignalK server, not the boat's live one, and do not copy hostnames,
   addresses or credentials from a running server into fixtures or docs.
 
+## 13. Plugin icons
+
+Every plugin's `signalk.appIcon` follows one house style so the apps are recognisable side by
+side in the SignalK app list. The style below was distilled from a ChatGPT image session that
+produced about fifteen icons for BoatHacks plugins (radar statistics, music player, checklist,
+VHF alarm, dead man's switch, ship's bell, inventory, package courier, boat logbook).
+
+### Style
+
+- **Palette: four flat colours.** Navy blue background (about `#002058`), gold for the main
+  subject (about `#FDBB15`), plus one or two accents only where the subject needs them (brown for
+  a package, white for a hat or highlight). Say "4 colors only" in the prompt and count them in
+  the result.
+- **Flat.** No shading, no gradients, no shadows, no highlights, no texture. If the first result
+  has shading, ask for "flat colors only" and keep the pose.
+- **Square, edge to edge.** The navy fills the whole canvas. No rounded corners (the system or
+  the app store rounds them), no outer frame or ring unless it carries meaning.
+- **No text.** No letters, numbers or labels in the picture. The one exception is a clock face,
+  which may show a time (the bell icon uses 11:42). Ask for "remove any letters or text" if some
+  sneak in.
+- **One subject, drawn large.** A single mascot or emblem that fills most of the frame. If it is
+  small in the frame, ask to zoom in on the part that carries the meaning (the squirrel's head,
+  a bigger checklist).
+- **Simple shapes, few details.** Thick uniform outlines and solid fills. Strip small hardware
+  (no screws, no skull and crossbones on a lever, no fine ropework). A detail that is not
+  readable at 72 px should not be there.
+- **Readable at favicon size.** Judge every candidate scaled down to 72 px and 32 px, not at full
+  size.
+
+### Subject
+
+- **A metaphor from the plugin's job, not a screenshot of its UI.** Examples that worked:
+  radar sweep with dots and bars for AIS statistics; ship's bell plus a clock for a watch-bell
+  plugin; magnifying glass over a storage shelf for inventory; a small skeleton pulling a wall
+  lever for a dead man's switch.
+- **The golden squirrel is the recurring mascot** for the BoatHacks plugins that want a
+  character. It wears the accessory that matches the job: sailor or captain's hat (white),
+  headphones and music notes (jukebox), a checklist, a package, a VHF handset beside an alarm
+  siren. A plugin without a character uses a plain emblem in the same palette instead.
+- **Check the animal.** Say "make sure it looks like a squirrel" and look for the bushy tail,
+  ear tufts and upright pose before accepting it.
+- **Relation to the webapp theme.** The icon navy is a brand colour for the icon only. It does
+  not replace the console palette in section 2.
+
+### Format and delivery
+
+- Final file: **512 x 512 PNG, square, no transparency needed**, saved as the file named by
+  `signalk.appIcon` (usually `public/icon.png`). The favicon uses the same file (section 11).
+- Derive smaller sizes yourself (`favicon.ico` 16/32/48, `apple-touch-icon.png` 180) by scaling
+  the 512 px master with PIL or ImageMagick. Do not ask the image model for each size; it does
+  not return exact pixel sizes reliably.
+- Keep the editable source (the prompt, and the SVG if one was made) next to the icon, for
+  example `docs/icon-prompt.md`, so the style can be reproduced.
+
+### Working with the image model
+
+- **Start from a saved reference.** For a new icon in the same family, begin with "new icon, same
+  color scheme and style, for <plugin>: <subject>" and attach or point at an existing icon.
+- **One change per message.** Good iterations from the session: "remove the outer ring",
+  "make the hat white", "zoom in on the squirrel's head", "make the checklist bigger and the
+  squirrel sit on top of it", "put a decorative knot at the end of the bellrope",
+  "remove the rounded corners, make it a square 512x512 pixel png". Several changes at once drift
+  the pose.
+- **Keep what works explicitly:** "like the pose, but use less shading", "same elements, frontal
+  view", "remove all old components other than the squirrel and the notes".
+- **Save, then restart.** When a direction is right, save it before asking for a new variant,
+  and start a fresh prompt for a new subject so the old composition does not leak into it.
+- **Mind the quota.** The free tier of the tool in the session ran out repeatedly (resets of
+  about 24 h), which stalled iteration. Collect the changes you want and send them together, or
+  use a paid tier or an API for a batch.
+
+### Prompt template
+
+```
+New app icon, flat vector style, for a SignalK plugin called "<plugin name>", which <one
+sentence on what it does>.
+
+Subject: <one subject, one pose>. A golden squirrel <doing X>, wearing <accessory>.
+Alternatively, for plugins without a mascot: <emblem built from 1 to 3 shapes>.
+
+Style: 4 colors only: navy blue background (#002058), gold (#FDBB15)<, brown for X><, white for
+Y>. Flat colors, no shading, no gradients, no shadows, no outlines of different colors, thick
+simple shapes. No text, no letters, no numbers.
+
+Composition: square canvas, background fills the whole square, no rounded corners, no border.
+The subject is centered and fills about 70 percent of the frame. It must stay readable when
+scaled down to 72 x 72 pixels, so leave out small details.
+
+Output: 1024 x 1024 PNG.
+```
+
+### Example prompt
+
+```
+New app icon, flat vector style, for a SignalK plugin called "signalk-stowage-mgmt", which keeps
+an inventory of what is stored where on the boat and helps find it again.
+
+Subject: a golden squirrel in a white sailor hat, sitting on a storage shelf and holding a brown
+package in both paws. A magnifying glass in the lower right shows the shelf section in front of
+the squirrel.
+
+Style: 4 colors only: navy blue background (#002058), gold (#FDBB15), brown for the package,
+white for the hat. Flat colors, no shading, no gradients, no shadows, thick simple shapes. No
+text, no letters, no numbers.
+
+Composition: square canvas, background fills the whole square, no rounded corners, no border.
+The squirrel is centered and fills about 70 percent of the frame. It must stay readable when
+scaled down to 72 x 72 pixels, so leave out small details. Make sure it looks like a squirrel
+(bushy tail, ear tufts).
+
+Output: 1024 x 1024 PNG.
+```
+
+Follow-ups that fit this icon, one per message: "remove the light source in the top left
+corner", "move the magnifying glass towards the viewer so it looks like we look through the glass
+at the lower right of the shelf", "remove any letters or text".
+
+### Icon checklist
+
+- [ ] Four flat colours, navy background, gold subject, accents named in the prompt
+- [ ] No shading, no gradients, no text, no rounded corners, square canvas
+- [ ] One large subject, a real squirrel if a mascot is used
+- [ ] Still readable at 72 px and 32 px
+- [ ] 512 x 512 PNG saved as the `appIcon` file, smaller sizes scaled from it
+- [ ] Prompt kept in the repo for reproducibility
+
 ## Checklist
 
 - [ ] Buildless; one UI approach; runtime deps vendored under `public/vendor/` with licences
@@ -297,4 +423,5 @@ a **circular buffer**: cap it (about 50 lines) and remove the oldest child when 
 - [ ] Times local without a zone or UTC with `Z`; dates `YYYY-MM-DD`
 - [ ] 48 px targets, single column on phone, grid on desktop, `prefers-reduced-motion` honoured
 - [ ] Favicon is the `appIcon` file; `theme-color` is `#080a0c`
+- [ ] App icon follows section 13 (four flat colours, 512 px square PNG)
 - [ ] Screenshots read in day, night, phone, desktop and offline
